@@ -22,6 +22,8 @@ public class Launch {
 		String decoded = eL.decodeString(encoded);
 		
 		System.out.println(decoded);
+		
+		System.out.println("[@]OrniAlivePacket[@]Asdfsdfs:dsfdsfsd".split("\\[@\\]")[2]);
 	}
 	
 //	public static void main(String[] args) throws Exception {

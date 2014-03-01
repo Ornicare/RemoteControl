@@ -97,7 +97,8 @@ public class ExpandableListAdapterExtend extends ExpandableListAdapter {
 			StringBuilder title = new StringBuilder();
 
 	
-			title.append(((ICategory) getGroup(groupPosition)).getText());
+			ICategory cat = ((ICategory) getGroup(groupPosition));
+			title.append(cat.getText());
 			text.setText(title.toString());
 
 //			title.append(" (");
@@ -149,6 +150,7 @@ public class ExpandableListAdapterExtend extends ExpandableListAdapter {
 			default:
 				break;
 			}
+			
 
 			return view;
 		}

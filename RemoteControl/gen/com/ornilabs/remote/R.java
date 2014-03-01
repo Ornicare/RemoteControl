@@ -29,7 +29,7 @@ public final class R {
         public static final int red=0x7f020005;
     }
     public static final class id {
-        public static final int action_button=0x7f080003;
+        public static final int action_image=0x7f080003;
         public static final int action_mask_not_linked_clients=0x7f080005;
         public static final int action_reploy=0x7f080006;
         public static final int action_texte=0x7f080004;

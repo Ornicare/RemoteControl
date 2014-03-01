@@ -4,22 +4,20 @@
     android:layout_height="match_parent"
     android:orientation="horizontal" >
 
-    <Button
-        android:id="@+id/action_button"
+    <ImageView
+        android:id="@+id/action_image"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
+        android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:gravity="right"
-        android:text="Button" />
+        android:src="@android:drawable/ic_media_ff" />
 
     <TextView
         android:id="@+id/action_texte"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/action_button"
-        android:layout_alignBottom="@+id/action_button"
-        android:layout_alignParentLeft="true"
-        android:text="TextView" />
+        android:layout_alignBottom="@+id/action_image"
+        android:layout_toRightOf="@+id/action_image"
+        android:text="@string/not_available_text" />
 
 </RelativeLayout>

@@ -15,11 +15,12 @@ import java.util.UUID;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -30,18 +31,15 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.LayoutInflater;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ExpandableListView;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.ExpandableListView.OnGroupCollapseListener;
 import android.widget.ExpandableListView.OnGroupExpandListener;
 import android.widget.Toast;
@@ -126,7 +124,7 @@ public class RemoteLaunch extends Activity {
 
 		serverName = getEmail(context) + " (" + getDeviceName() + ")";
 
-		// registerForContextMenu(list);
+		 registerForContextMenu(list);
 
 		restoreState();
 
@@ -166,11 +164,120 @@ public class RemoteLaunch extends Activity {
 
 	}
 	
+	public HashMap<String, String> getAppairedClients() {
+		return appairedClient;
+	}
+	
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v,
+			ContextMenuInfo menuInfo) {
+		
+		
+		super.onCreateContextMenu(menu, v, menuInfo);
+		
+		
+
+		ExpandableListView.ExpandableListContextMenuInfo info = (ExpandableListView.ExpandableListContextMenuInfo) menuInfo;
+
+		menu.setHeaderTitle("Default");
+		int type = ExpandableListView
+				.getPackedPositionType(info.packedPosition);
+
+		int group = ExpandableListView
+				.getPackedPositionGroup(info.packedPosition);
+		
+
+		final ICategory cat = clientsList.get(group);
+		if(!appairedClient.containsKey(cat.getText()+":"+cat.getUUID())) return;
+		
+
+//		int child = ExpandableListView
+//				.getPackedPositionChild(info.packedPosition);
+
+		// Only create a context menu for group items
+//		if (type == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
+//		}
+//		else 
+		if(type == ExpandableListView.PACKED_POSITION_TYPE_GROUP) {
+			// Array created earlier when we built the expandable list
+			String page = clientsList.get(group)
+					.getText();
+
+			menu.setHeaderTitle(page);
+			//TODO add alias
+//			menu.add(Menu.NONE, 0, 0, "Add a task...");
+		}
+		
+		menu.add(Menu.NONE, 1, 1, "Unlink");
+		menu.add(Menu.NONE, 2, 2, "Cancel");
+	}
+	
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		super.onContextItemSelected(item);
+
+		ExpandableListView.ExpandableListContextMenuInfo info = (ExpandableListView.ExpandableListContextMenuInfo) item.getMenuInfo();
+		
+		int type = ExpandableListView
+				.getPackedPositionType(info.packedPosition);
+
+		final int group = ExpandableListView
+				.getPackedPositionGroup(info.packedPosition);
+		
+		final ICategory cat = clientsList.get(group);
+
+		
+
+//		int child = ExpandableListView
+//				.getPackedPositionChild(info.packedPosition);
+
+		if(type == ExpandableListView.PACKED_POSITION_TYPE_GROUP) {
+			// Array created earlier when we built the expandable list
+			
+			String page = cat.getText();
+			Log.i("page",page);
+			if(item.getItemId()==1) {
+				Log.i("Unlinkage","Unlinkage");
+				AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+				alert.setTitle("Unlinkage");
+				alert.setMessage("Are you sure to unlink the computer "+page+" ?");
+
+				alert.setPositiveButton("Unlink", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int whichButton) {
+						clientsList.remove(cat);
+						appairedClient.remove(cat.getText()+":"+cat.getUUID());
+						adapter.notifyDataSetChanged();
+						runOnUiThread(new Runnable() {
+							
+							@Override
+							public void run() {
+								saveState();
+							}
+						});
+					}
+				});
+				
+				alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int whichButton) {
+						//nothing
+					}
+				});
+				alert.show();
+			} 
+			else if(item.getItemId()==2) {
+				//nothing
+			}
+		}
+
+		return true;
+	}
+
+	
 	private class WifiListener extends TimerTask {
 
 		@Override
 		public void run() {
-			// TODO Auto-generated method stub
 			if(!isConnected(RemoteLaunch.this)) {
 				if(groupListener.isReady())groupListener.closeConnection();
 			}
@@ -321,7 +428,8 @@ public class RemoteLaunch extends Activity {
 				 ArrayList<ICategory> newDataList = new ArrayList<ICategory>(clientsList);
 				 ArrayList<ICategory> copyList = (new ArrayList<ICategory>(clientsList));
 				 for(int i = copyList.size()-1;i>=0;i--) {
-					 if(((Client) copyList.get(i)).getState()==Status.Connected) {
+//					 if(((Client) copyList.get(i)).getState()==Status.Connected ) {
+					 if(!appairedClient.containsKey(copyList.get(i).getText()+":"+copyList.get(i).getUUID()) ) {
 						 newDataList.remove(i);
 						 Log.i("dsqds", "Client removed");
 					 }
@@ -543,6 +651,9 @@ public class RemoteLaunch extends Activity {
 				showToast("Device " + params[1] + " not linked ! Abort.");
 				return null;
 			}
+			
+			modifyDialogMessage("Initiate encryption layer...");
+			
 			EncryptionLayer eL = new EncryptionLayer();
 			
 			modifyDialogMessage("Client appaired, sending message");
@@ -554,6 +665,9 @@ public class RemoteLaunch extends Activity {
 				InetAddress ip = groupListener.getIp(params[1]);
 				if (ip == null) {
 					showToast("Device not connected ! Abort.");
+					for(ICategory c : clientsList) {
+						if((c.getText()+":"+c.getUUID()).equals(params[1])) ((Client) c).setState(com.ornilabs.server.Status.Deconnected);
+					}
 					return null;
 				}
 				canal = new Socket(groupListener.getIp(params[1]), 51425);
@@ -582,8 +696,7 @@ public class RemoteLaunch extends Activity {
 				out.flush();
 				Log.e("ds", "ici"+("Command:" 
 						+ appairedClient.get(params[1])+ ":"+ command).length());
-				modifyDialogMessage("Message send, waiting for answer..."+eL.encodeString("Command:" 
-						+ appairedClient.get(params[1])+ ":"+ command,clientPublicKey));
+				modifyDialogMessage("Message send, waiting for answer...");
 
 				try {
 					// wait for client answer

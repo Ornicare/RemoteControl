@@ -15,7 +15,7 @@ public class AliveEmitter {
 	public AliveEmitter(int portToSend, String deviceName, UUID publicToken) throws IOException {
 		this.emitter = new Emitter(portToSend);
 		timer = new Timer();
-		timer.schedule(new AliveTask(deviceName+":"+publicToken.toString()), 0, Params.TIMEOUT/2);
+		timer.schedule(new AliveTask("[@]OrniAlivePacket[@]"+deviceName+":"+publicToken.toString()), 0, Params.TIMEOUT/2);
 	}
 	
 	private class AliveTask extends TimerTask {

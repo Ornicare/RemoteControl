@@ -8,6 +8,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -50,12 +51,12 @@ public enum Action implements IChild {
 			
 			RelativeLayout rLayout = (RelativeLayout) RelativeLayout.inflate(mContext, R.layout.simple_action_layout, null);
 			TextView tv = (TextView) rLayout.findViewById(R.id.action_texte);
-			Button button = (Button) rLayout.findViewById(R.id.action_button);
-			tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 20);
+			ImageView image = (ImageView) rLayout.findViewById(R.id.action_image);
+			tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 23);
 			tv.setPadding(10, 0, 0, 0);
 			tv.setText(name);
-			button.setText(getName());
-			button.setOnClickListener(new OnClickListener() {
+//			button.setText(getName());
+			rLayout.setOnClickListener(new OnClickListener() {
 
 				@Override
 				public void onClick(View v) {
@@ -125,7 +126,8 @@ public enum Action implements IChild {
 //
 //			linear.addView(button);
 //
-//			linear.setLongClickable(true);
+			rLayout.setLongClickable(true);
+			rLayout.setClickable(true);
 			return rLayout;
 		}
 	}

@@ -36,9 +36,10 @@ public class GroupReceiver extends StoppableThread{
 	protected synchronized void onMessageReceived(String message, InetAddress sender) {
 		String[] splitMessage = message.split(":");
 		if(splitMessage.length<1) return; 
+		if(!message.startsWith("[@]OrniAlivePacket[@]") && message.split("\\[@\\]").length<3) return;
 //		String deviceName = splitMessage[0].trim();
-		Log.i("test", message.trim());
-		put(message.trim(), Status.Connected, sender);
+		Log.i("test", message.split("\\[@\\]")[2].trim());
+		put( message.split("\\[@\\]")[2].trim(), Status.Connected, sender);
 	}
 	
 	public void put(String deviceName, Status status, InetAddress sender) {
@@ -59,6 +60,7 @@ public class GroupReceiver extends StoppableThread{
 	public void deconnect(String deviceName) {
 		synchronized(mutex) {
 			devices.put(deviceName, Status.Deconnected);
+//			devices.remove(deviceName);
 			deconnectTasks.remove(deviceName);
 			devicesIps.remove(deviceName);
 		}
