@@ -15,11 +15,13 @@ public class Emitter {
 			throws IOException {
 		super();
 		socket = new MulticastSocket();
-		InetAddress group = InetAddress.getByName("224.42.42.44");
-		socket.joinGroup(group);
+
+		
+		sendGroup = InetAddress.getByAddress(Params.Adress);
+//		InetAddress group = InetAddress.getByName("224.42.42.44");
+		socket.joinGroup(sendGroup);
 		this.portToSend = portToSend;
 
-		sendGroup = InetAddress.getByName("224.42.42.43");
 	}
 
 	public void sendMessage(String messageToSend) {

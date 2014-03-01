@@ -8,12 +8,12 @@ import java.net.MulticastSocket;
 import com.ornilabs.helpers.StoppableThread;
 
 public abstract class Receiver extends StoppableThread {
-	private MulticastSocket socket;
-	private InetAddress group;
+	protected MulticastSocket socket;
+	protected InetAddress group;
 
 	public Receiver(int portToListen) throws IOException {
 		socket = new MulticastSocket(portToListen);
-		group = InetAddress.getByName("224.42.42.43");
+		group = InetAddress.getByAddress(Params.Adress);
 		socket.joinGroup(group);
 	}
 

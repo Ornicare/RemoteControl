@@ -1,0 +1,32 @@
+<!-- <menu xmlns:android="http://schemas.android.com/apk/res/android" > -->
+
+<!--     <item -->
+<!--         android:id="@+id/action_add_category" -->
+<!--         android:orderInCategory="33" -->
+<!--         android:title="@string/listen_mode" -->
+<!--         android:icon="@drawable/add" -->
+<!--     	android:numericShortcut="1"/> -->
+<!--     <item -->
+<!--         android:id="@+id/action_reploy" -->
+<!--         android:orderInCategory="33" -->
+<!--         android:title="@string/menu2" -->
+<!--         android:icon="@drawable/collapse" -->
+<!--     	android:numericShortcut="2"/> -->
+
+<!-- </menu> -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+<!--        <item -->
+<!--         android:id="@+id/action_add_category" -->
+<!--         android:title="@string/listen_mode" -->
+<!--         android:icon="@drawable/add" -->
+<!--         android:showAsAction="ifRoom" -->
+<!--     	android:numericShortcut="1"/> -->
+    <item
+        android:id="@+id/action_reploy"
+        android:title="@string/menu2"
+        android:icon="@drawable/collapse"
+        android:showAsAction="ifRoom"
+    	android:numericShortcut="2"/>
+
+</menu>

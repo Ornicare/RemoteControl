@@ -2,7 +2,8 @@
 <resources>
 
     <string name="app_name">RemoteControl</string>
-    <string name="action_settings">Settings</string>
-    <string name="hello_world">Hello world!</string>
+    <string name="menu2">menu2</string>
+    <string name="listen_mode">Listen mode</string>
+    <string name="not_available_text">Not available</string>
 
 </resources>
