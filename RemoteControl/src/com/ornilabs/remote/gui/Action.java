@@ -9,12 +9,14 @@ import android.util.TypedValue;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.ornilabs.classes.ChildView;
 import com.ornilabs.interfaces.ICategory;
 import com.ornilabs.interfaces.IChild;
 import com.ornilabs.interfaces.IChildView;
+import com.ornilabs.remote.R;
 import com.ornilabs.remote.RemoteLaunch;
 
 public enum Action implements IChild {
@@ -45,16 +47,13 @@ public enum Action implements IChild {
 
 		@Override
 		public View create(final ICategory motherCathegory) {
-			LinearLayout linear = new LinearLayout(mContext);
-			linear.setOrientation(LinearLayout.HORIZONTAL);
-
-			TextView tv = new TextView(mContext);
-			tv.setText(name);
+			
+			RelativeLayout rLayout = (RelativeLayout) RelativeLayout.inflate(mContext, R.layout.simple_action_layout, null);
+			TextView tv = (TextView) rLayout.findViewById(R.id.action_texte);
+			Button button = (Button) rLayout.findViewById(R.id.action_button);
 			tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 20);
 			tv.setPadding(10, 0, 0, 0);
-			linear.addView(tv);
-
-			Button button = new Button(mContext);
+			tv.setText(name);
 			button.setText(getName());
 			button.setOnClickListener(new OnClickListener() {
 
@@ -83,11 +82,51 @@ public enum Action implements IChild {
 
 				}
 			});
-
-			linear.addView(button);
-
-			linear.setLongClickable(true);
-			return linear;
+			
+			
+//			LinearLayout linear = new LinearLayout(mContext);
+//			linear.setOrientation(LinearLayout.HORIZONTAL);
+//
+//			TextView tv = new TextView(mContext);
+//			tv.setText(name);
+//			tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 20);
+//			tv.setPadding(10, 0, 0, 0);
+//			linear.addView(tv);
+//
+//			Button button = new Button(mContext);
+//			button.setText(getName());
+//			button.setOnClickListener(new OnClickListener() {
+//
+//				@Override
+//				public void onClick(View v) {
+//					try {
+//						switch (type) {
+//						case LINK:
+//
+//							((RemoteLaunch) mContext).linkWithDevice(motherCathegory.getText()+":"+motherCathegory.getUUID());
+//
+//							break;
+//						case STOP:
+//							((RemoteLaunch) mContext)
+//									.sendCommandToDevice("shutdown -s -t 00", motherCathegory.getText()+":"+motherCathegory.getUUID());
+//							break;
+//						case LOCK:
+//							((RemoteLaunch) mContext)
+//									.sendCommandToDevice("rundll32.exe user32.dll, LockWorkStation", motherCathegory.getText()+":"+motherCathegory.getUUID());
+//							break;
+//						}
+//					} catch (IOException e) {
+//						Log.e("Action", "Cannot execute action "+name);
+//						e.printStackTrace();
+//					}
+//
+//				}
+//			});
+//
+//			linear.addView(button);
+//
+//			linear.setLongClickable(true);
+			return rLayout;
 		}
 	}
 

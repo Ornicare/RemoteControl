@@ -1,6 +1,11 @@
-Add an asymetric encryption layer
+XXX Add an asymetric encryption layer
 Repenser l'application pour moins de batterie
-Un bouton pour masque les clients non appairées.
+XXX Un bouton pour masque les clients non appairées.
+Mettre à jour les images, question de droits.
 Option de suppression.
 Faire un truc de log pour jm
 Restorer l'état étendu/replié à la rotation.
+Différencier mes paquets d'avec les autres (header ?)
+
+Faire une option pour choisir l'affichage par défaut ou non des clients non linkés.
+Timeout sur la popup de linkage genre 30s, pour ne pas bloquer l'appli. //option de fermeture de la progress truc

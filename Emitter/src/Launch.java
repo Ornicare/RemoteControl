@@ -19,7 +19,7 @@ public class Launch {
 	public static void main(String[] args) throws IOException {
 //		Emitter emitter = new Emitter(51425);
 //		emitter.sendMessage("Je suis un troll.");
-		groupListener = new GroupReceiver(51424);
+		groupListener = new GroupReceiver(5354);
 		groupListener.start();
 		
 		appairedClient = new HashMap<String, String>();

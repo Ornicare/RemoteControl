@@ -14,7 +14,7 @@ import java.security.spec.X509EncodedKeySpec;
 
 import javax.crypto.Cipher;
 
-import android.util.Base64;
+import com.ornilabs.consts.Constantes;
 
 public class EncryptionLayer {
 	private KeyPair kp;
@@ -22,7 +22,7 @@ public class EncryptionLayer {
 	public EncryptionLayer() {
 		try {
 			KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-			kpg.initialize(1024);
+			kpg.initialize(Constantes.RSAKEY_LENGTH); // 512 is the keysize.
 			kp = kpg.generateKeyPair();
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
@@ -37,12 +37,12 @@ public class EncryptionLayer {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	    return new String(Base64.encode(baos.toByteArray(), Base64.DEFAULT));
+	    return new String(Base64.encode(baos.toByteArray()));
 	}
 	
 	public String decodeString(String input) {
 		try {
-			return new String(decrypt(Base64.decode(input, Base64.DEFAULT), kp.getPrivate()));
+			return new String(decrypt(Base64.decode(input), kp.getPrivate()));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -50,7 +50,7 @@ public class EncryptionLayer {
 	}
 	
 	public String encodeString(String input, String key) {
-		byte[] keyBytes = Base64.decode(key.getBytes(), Base64.DEFAULT);
+		byte[] keyBytes = Base64.decode(key.getBytes());
 	    X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(keyBytes);
 	    
 	    RSAPublicKey pubKey = null;
@@ -65,7 +65,7 @@ public class EncryptionLayer {
 	    if(pubKey==null) return null;
 	    
 		try {
-			return new String(Base64.encode(encrypt(input.getBytes(), pubKey), Base64.DEFAULT));
+			return new String(Base64.encode(encrypt(input.getBytes(), pubKey)));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -81,6 +81,7 @@ public class EncryptionLayer {
 
 	private byte[] decrypt(byte[] inpBytes, PrivateKey key)
 			throws Exception {
+		if(inpBytes==null) return inpBytes;
 		Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 		cipher.init(Cipher.DECRYPT_MODE, key);
 		return cipher.doFinal(inpBytes);

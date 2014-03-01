@@ -9,12 +9,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ExpandableListView;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.ornilabs.classes.ExpandableListAdapter;
 import com.ornilabs.interfaces.ICategory;
+import com.ornilabs.remote.gui.Action;
 import com.ornilabs.remote.gui.Client;
 import com.ornilabs.server.Status;
 
@@ -78,74 +80,83 @@ public class ExpandableListAdapterExtend extends ExpandableListAdapter {
 	@Override
 	public View getGroupView(int groupPosition, boolean isExpanded,
 			View convertView, ViewGroup parent) {
+		Log.e("ffsd",""+RemoteLaunch.showNotLinkedClients);
+		try {
+			View view = convertView;
+			TextView text = null;
+			ImageView image = null;
+		
+			if (view == null) {
+				view = LayoutInflater.from(mContext).inflate(
+						R.layout.expandable_list_group_view, parent, false);
+			}
 
-		View view = convertView;
-		TextView text = null;
-		ImageView image = null;
+			text = (TextView) view.findViewById(R.id.groupHeader);
+			image = (ImageView) view.findViewById(R.id.expandableIcon);
 
-		if (view == null) {
-			view = LayoutInflater.from(mContext).inflate(
-					R.layout.expandable_list_group_view, parent, false);
+			StringBuilder title = new StringBuilder();
+
+	
+			title.append(((ICategory) getGroup(groupPosition)).getText());
+			text.setText(title.toString());
+
+//			title.append(" (");
+//			title.append(((ICategory) getGroup(groupPosition)).getChildList()
+//					.size());
+//			title.append(")");
+
+
+			/*
+			 * if this is not the first group (future travel) show the arrow image
+			 * and change state if necessary
+			 */
+			// if(groupPosition != 0){
+			int imageResourceId = isExpanded ? android.R.drawable.ic_menu_revert
+					: android.R.drawable.ic_input_add;
+			image.setImageResource(imageResourceId);
+
+			 
+			// } else {
+			// image.setVisibility(View.INVISIBLE);
+			// }
+
+			Status status = ((Client) dataList.get(groupPosition)).getState();
+			status = status == null ? Status.Deconnected : status;
+			
+			switch (status) {
+			case Deconnected:
+				text.setBackgroundResource(R.drawable.red);
+				adapted.collapseGroup(groupPosition);
+//				adapted.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
+//					@Override
+//					public boolean onGroupClick(ExpandableListView parent, View v,
+//							int groupPosition, long id) {
+//						// Doing nothing
+//						return true;
+//					}
+//				});
+				image.setImageResource(android.R.drawable.ic_dialog_alert);
+				image.setVisibility(View.VISIBLE);
+				break;
+			case Connected:
+				text.setBackgroundResource(R.drawable.notlinked);
+				makeClickable(image);
+				break;
+			case ConnectedAndLinked:
+				text.setBackgroundResource(R.drawable.green);
+				makeClickable(image);
+				break;
+			default:
+				break;
+			}
+
+			return view;
 		}
-
-		text = (TextView) view.findViewById(R.id.groupHeader);
-		image = (ImageView) view.findViewById(R.id.expandableIcon);
-
-		StringBuilder title = new StringBuilder();
-
-		title.append(((ICategory) getGroup(groupPosition)).getText());
-
-//		title.append(" (");
-//		title.append(((ICategory) getGroup(groupPosition)).getChildList()
-//				.size());
-//		title.append(")");
-
-		text.setText(title.toString());
-
-		/*
-		 * if this is not the first group (future travel) show the arrow image
-		 * and change state if necessary
-		 */
-		// if(groupPosition != 0){
-		int imageResourceId = isExpanded ? android.R.drawable.ic_menu_revert
-				: android.R.drawable.ic_input_add;
-		image.setImageResource(imageResourceId);
-
-		 
-		// } else {
-		// image.setVisibility(View.INVISIBLE);
-		// }
-
-		Status status = ((Client) dataList.get(groupPosition)).getState();
-		status = status == null ? Status.Deconnected : status;
-		switch (status) {
-		case Deconnected:
-			text.setBackgroundResource(R.drawable.red);
-			adapted.collapseGroup(groupPosition);
-//			adapted.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
-//				@Override
-//				public boolean onGroupClick(ExpandableListView parent, View v,
-//						int groupPosition, long id) {
-//					// Doing nothing
-//					return true;
-//				}
-//			});
-			image.setImageResource(android.R.drawable.ic_dialog_alert);
-			image.setVisibility(View.VISIBLE);
-			break;
-		case Connected:
-			text.setBackgroundResource(R.drawable.notlinked);
-			makeClickable(image);
-			break;
-		case ConnectedAndLinked:
-			text.setBackgroundResource(R.drawable.green);
-			makeClickable(image);
-			break;
-		default:
-			break;
+		catch(Exception e) {
+			e.printStackTrace();
+			 return new FrameLayout(mContext);
 		}
-
-		return view;
+		
 	}
 
 	private void makeClickable(View image) {

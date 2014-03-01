@@ -26,7 +26,7 @@ public abstract class Receiver extends StoppableThread {
 		try {
 
 			DatagramPacket packet;
-			byte[] buf = new byte[256];
+			byte[] buf = new byte[Params.PACKET_LENGTH];
 			packet = new DatagramPacket(buf, buf.length);
 			socket.receive(packet);
 			String received = new String(packet.getData());

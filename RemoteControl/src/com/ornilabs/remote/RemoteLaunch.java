@@ -15,6 +15,8 @@ import java.util.UUID;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -28,14 +30,26 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MenuItem.OnMenuItemClickListener;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ExpandableListView;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.ExpandableListView.OnGroupCollapseListener;
 import android.widget.ExpandableListView.OnGroupExpandListener;
 import android.widget.Toast;
 
 import com.ornilabs.classes.ExpandableListAdapter;
+import com.ornilabs.consts.Constantes;
+import com.ornilabs.encryption.EncryptionLayer;
+import com.ornilabs.helpers.sockets.Params;
 import com.ornilabs.interfaces.ICategory;
 import com.ornilabs.interfaces.IChild;
 import com.ornilabs.remote.gui.Action;
@@ -43,8 +57,10 @@ import com.ornilabs.remote.gui.Client;
 import com.ornilabs.server.GroupReceiver;
 import com.ornilabs.server.Status;
 
+@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 public class RemoteLaunch extends Activity {
 
+	public static boolean showNotLinkedClients = true;
 	private ExpandableListView list;
 	private SharedPreferences shared;
 	private ExpandableListAdapter adapter;
@@ -55,13 +71,20 @@ public class RemoteLaunch extends Activity {
 	private Context context;
 	private String uuid;
 
-	private String serverName;
+	private String serverName; 
 	private ArrayList<IChild> childListLink;
 	private MulticastLock lock;
+	private MenuItem showMenu;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		
+		//PArams for encryption => attention gère la taille max des messages.
+		Params.PACKET_LENGTH = 3000; //1365 for 1024 RSA key. (*4/3)
+		Constantes.MESSAGE_LENGTH = 117*8*2; //RSAKEY_LENGTH/8 -11 octets (padding PKCS1)
+		Constantes.RSAKEY_LENGTH = 1024*2;
 
 		ProgressDialog mProgressDialog = ProgressDialog.show(RemoteLaunch.this,
 				"Loading...", "Application is Loading...");
@@ -80,6 +103,8 @@ public class RemoteLaunch extends Activity {
 						.createMulticastLock("Log_Tag");
 				lock.acquire();
 		}
+		
+		Log.i("lock",""+lock.isHeld());
 
 		list.setOnGroupCollapseListener(new OnGroupCollapseListener() {
 
@@ -218,15 +243,110 @@ public class RemoteLaunch extends Activity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.principale, menu);
+		showMenu = menu.findItem(R.id.action_mask_not_linked_clients);
+//		showMenu.getActionView().clearAnimation();
+		updateShowMenu();
 		return true;
 	}
+	
+	private void updateShowMenu() {
+			
+			
+//	        Animation rotation = AnimationUtils.loadAnimation(this, R.layout.action_bar_progress);
+//	        rotation.setRepeatCount(Animation.INFINITE);
+//	        if(RemoteLaunch.showNotLinkedClients) iv.startAnimation(rotation);
+
+		if(showMenu.getActionView()==null)showMenu.setActionView(R.layout.action_bar_progress);
+			if(RemoteLaunch.showNotLinkedClients) {
+//				LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+//		        ImageView iv = (ImageView) inflater.inflate(R.layout.refresh_action_view, null);
+//
+		        Animation rotation = AnimationUtils.loadAnimation(this, R.layout.clockwise_refresh);
+		        rotation.setRepeatCount(Animation.INFINITE);
+//		        iv.startAnimation(rotation);
+//				showMenu.setActionView(iv);
+//				showMenu.setActionView(R.layout.action_bar_progress);
+				if(showMenu.getActionView()!=null)showMenu.getActionView().startAnimation(rotation);
+			}
+			else {
+				if(showMenu.getActionView()!=null)showMenu.getActionView().clearAnimation();
+//				showMenu.setActionView(null);
+//				showMenu.setActionView(R.layout.action_bar_stop);
+			}
+				
+//	        showMenu.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+//				
+//				@Override
+//				public boolean onMenuItemClick(MenuItem item) {
+//					RemoteLaunch.this.onOptionsItemSelected(showMenu);
+//					return false;
+//				}
+//			});
+	        showMenu.getActionView().setOnClickListener(new OnClickListener() {
+				
+				@Override
+				public void onClick(View v) {
+					RemoteLaunch.this.onOptionsItemSelected(showMenu);
+				}
+			});
+//		}
+//		else {
+//			showMenu.setIcon(android.R.drawable.ic_menu_close_clear_cancel);
+//			if(showMenu.getActionView()!=null)showMenu.getActionView().clearAnimation();
+//			showMenu.setActionView(null);
+//		}
+		
+//		if(RemoteLaunch.showNotLinkedClients) {
+//			
+// 			
+//		}
+//		else {
+////			showMenu.setIcon(android.R.drawable.ic_menu_close_clear_cancel);
+//			if(showMenu.getActionView()!=null)showMenu.getActionView().clearAnimation();
+////			showMenu.setActionView(null);
+//		}
+		
+	}
+	
+
+
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-		// case R.id.action_add_category:
-		// // Comportement du bouton "A Propos"
-		// return true;
+		 case R.id.action_mask_not_linked_clients:
+			 if(RemoteLaunch.showNotLinkedClients) {
+				 RemoteLaunch.showNotLinkedClients = false;
+				 Toast.makeText(context, "Now hiding not linked clients.", Toast.LENGTH_SHORT).show();
+				 ArrayList<ICategory> newDataList = new ArrayList<ICategory>(clientsList);
+				 ArrayList<ICategory> copyList = (new ArrayList<ICategory>(clientsList));
+				 for(int i = copyList.size()-1;i>=0;i--) {
+					 if(((Client) copyList.get(i)).getState()==Status.Connected) {
+						 newDataList.remove(i);
+						 Log.i("dsqds", "Client removed");
+					 }
+				 }
+				 clientsList = newDataList;
+				 adapter = new ExpandableListAdapterExtend(this, clientsList, list);
+				 list.setAdapter(adapter);
+				 adapter.notifyDataSetChanged();
+				 
+			 }
+			 else {
+				 RemoteLaunch.showNotLinkedClients = true;
+				 Toast.makeText(context, "Now showing not linked clients.", Toast.LENGTH_SHORT).show();
+			 }
+
+			 updateShowMenu();
+			 runOnUiThread(new Runnable() {
+				
+				@Override
+				public void run() {
+					 adapter.notifyDataSetChanged();
+				}
+			});
+			 
+		 return true;
 		case R.id.action_reploy:
 			for (int i = 0; i < clientsList.size(); i++) {
 				if (clientsList.get(i).isUnwrapped()) {
@@ -235,6 +355,7 @@ public class RemoteLaunch extends Activity {
 				}
 			}
 			// saveState();
+			 Toast.makeText(context, "Retract all clients.", Toast.LENGTH_SHORT).show();
 			adapter.notifyDataSetChanged();
 			return true;
 		default:
@@ -273,7 +394,6 @@ public class RemoteLaunch extends Activity {
 		} catch (Exception e) {
 			// In case of corrupted data, recreate them.
 			appairedClient = new HashMap<String, String>();
-			saveState();
 		}
 
 		clientsList = new ArrayList<ICategory>();
@@ -284,6 +404,8 @@ public class RemoteLaunch extends Activity {
 
 		adapter = new ExpandableListAdapterExtend(this, clientsList, list);
 		list.setAdapter(adapter);
+		
+		saveState();
 
 		// save state of collapse
 		// list.setOnGroupCollapseListener(new OnGroupCollapseListener() {
@@ -318,43 +440,58 @@ public class RemoteLaunch extends Activity {
 	private class ControlThread extends TimerTask {
 		@Override
 		public void run() {
-			Map<String, Status> clients = groupListener.getConnectedClients();
-			for (String deviceNameS : clients.keySet()) {
-				String[] splitMessage = deviceNameS.split(":");
-				String deviceName = splitMessage[0].trim();
-				String deviceUUID = splitMessage[1].trim();
-				boolean contains = false;
-				for (ICategory c : clientsList) {
-					if (c.getText().equals(deviceName)
-							&& c.getUUID().equals(deviceUUID)) {
-						contains = true;
-						((Client) c).setState(clients.get(deviceNameS));
-						if (appairedClient.containsKey(deviceNameS)
-								&& ((Client) c).getState() == Status.Connected) {
-							((Client) c).setState(Status.ConnectedAndLinked);
+			try {
+				Map<String, Status> clients = groupListener.getConnectedClients();
+				for (String deviceNameS : clients.keySet()) {
+					String[] splitMessage = deviceNameS.split(":");
+					if(splitMessage.length<2) return;
+					try {
+						UUID.fromString(splitMessage[1]);
+					}
+					catch(Exception e) {
+						//not a client
+						return;
+					}
+					if(deviceNameS.split("@").length<2) return;
+					
+					String deviceName = splitMessage[0].trim();
+					String deviceUUID = splitMessage[1].trim();
+					boolean contains = false;
+					for (ICategory c : clientsList) {
+						if (c.getText().equals(deviceName)
+								&& c.getUUID().equals(deviceUUID)) {
+							contains = true;
+							((Client) c).setState(clients.get(deviceNameS));
+							if (appairedClient.containsKey(deviceNameS)
+									&& ((Client) c).getState() == Status.Connected) {
+								((Client) c).setState(Status.ConnectedAndLinked);
+							}
+
 						}
 
 					}
-
-				}
-				if (!contains) {
-					if (appairedClient.containsKey(deviceNameS)) {
-						Client c = new Client(deviceNameS.trim(), childList);
-						c.setState(Status.ConnectedAndLinked);
-						clientsList.add(c);
-					} else {
-						Client c = new Client(deviceNameS.trim(), childListLink);
-						c.setState(Status.Connected);
-						clientsList.add(c);
+					if (!contains) {
+						if (appairedClient.containsKey(deviceNameS)) {
+							Client c = new Client(deviceNameS.trim(), childList);
+							c.setState(Status.ConnectedAndLinked);
+							clientsList.add(c);
+						} else if(RemoteLaunch.showNotLinkedClients){
+							Client c = new Client(deviceNameS.trim(), childListLink);
+							c.setState(Status.Connected);
+							clientsList.add(c);
+						}
 					}
 				}
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						adapter.notifyDataSetChanged();
+					}
+				});
+			} catch(Exception e) {
+				Log.e("Error in control thread", "Error in control thread");
 			}
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					adapter.notifyDataSetChanged();
-				}
-			});
+			
 		}
 
 	}
@@ -365,7 +502,7 @@ public class RemoteLaunch extends Activity {
 	}
 
 	public void linkWithDevice(String deviceName) throws IOException {
-		new MyAsyncLink().execute(deviceName);
+			new MyAsyncLink().execute(deviceName);
 	}
 
 	private abstract class ExtendeAsyncTask<E, F, G> extends AsyncTask<E, F, G> {
@@ -385,8 +522,13 @@ public class RemoteLaunch extends Activity {
 
 		@Override
 		protected void onPostExecute(Void result) {
-			if (mProgressDialog.isShowing())
-				mProgressDialog.dismiss();
+			try {
+				//crashe if rotate
+				if(mProgressDialog.isShowing())mProgressDialog.dismiss();
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+			}
 		}
 
 		@Override
@@ -396,10 +538,13 @@ public class RemoteLaunch extends Activity {
 
 		@Override
 		protected Void doInBackground(String... params) {
+			
 			if (!appairedClient.containsKey(params[1])) {
 				showToast("Device " + params[1] + " not linked ! Abort.");
 				return null;
 			}
+			EncryptionLayer eL = new EncryptionLayer();
+			
 			modifyDialogMessage("Client appaired, sending message");
 
 			Socket canal = null;
@@ -424,16 +569,25 @@ public class RemoteLaunch extends Activity {
 				PrintWriter out = new PrintWriter(canal.getOutputStream());
 				BufferedReader in = new BufferedReader(new InputStreamReader(
 						canal.getInputStream()));
+				
 
-				out.println("Command:" 
-						+ appairedClient.get(params[1])+ ":"+ command);
+				modifyDialogMessage("Initiate encryption layer...");
+				out.println(eL.getPublicKey());
 				out.flush();
-				Log.e("ds", "ici");
-				modifyDialogMessage("Message send, waiting for answer...");
+				String clientPublicKey = in.readLine();
+
+				
+				out.println(eL.encodeString("Command:" 
+						+ appairedClient.get(params[1])+ ":"+ command,clientPublicKey));
+				out.flush();
+				Log.e("ds", "ici"+("Command:" 
+						+ appairedClient.get(params[1])+ ":"+ command).length());
+				modifyDialogMessage("Message send, waiting for answer..."+eL.encodeString("Command:" 
+						+ appairedClient.get(params[1])+ ":"+ command,clientPublicKey));
 
 				try {
 					// wait for client answer
-					String response = in.readLine();
+					String response = eL.decodeString(in.readLine());
 
 					Log.i("result", response);
 					if (response.startsWith("denied")) {
@@ -561,12 +715,26 @@ public class RemoteLaunch extends Activity {
 		
 		@Override
 		protected void onPostExecute(Void result) {
-			if(mProgressDialog.isShowing())mProgressDialog.dismiss();
+			try {
+
+				if(mProgressDialog!=null && mProgressDialog.isShowing())mProgressDialog.dismiss();
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+			}
+
+			
 		}
 
 		@Override
 		protected void onPreExecute() {
-			mProgressDialog = ProgressDialog.show(RemoteLaunch.this, "Linking...", "Starting link procedure...");
+			try {
+				mProgressDialog = ProgressDialog.show(RemoteLaunch.this, "Linking...", "Starting link procedure...");
+			}
+			catch(Throwable e) {
+				e.printStackTrace();
+			}
+			
 		}
 
 		private void modifyDialogMessage(final String message) {
@@ -585,22 +753,39 @@ public class RemoteLaunch extends Activity {
 			Socket canal = null;
 			try {
 				canal = new Socket(groupListener.getIp(params[0]), 51425);
-			} catch (IOException e1) {
+			} catch (Exception e1) {
 				e1.printStackTrace();
+				return null;
 			}
+			
+			
+			EncryptionLayer eL = new EncryptionLayer();
+			
+			
 			try {
 				PrintWriter out = new PrintWriter(canal.getOutputStream());
 				BufferedReader in = new BufferedReader(new InputStreamReader(
 						canal.getInputStream()));
+				
+				modifyDialogMessage("Initiate encryption layer...");
+				out.println(eL.getPublicKey());
+				out.flush();
+				String clientPublicKey = in.readLine();
+				
+				
 				modifyDialogMessage("Link established, sending message");
 				// Send serverUUID
 				System.out.println("Server name : " + uuid);
-				out.println(uuid + ":" + serverName);
+				
+				String message = uuid + ":" + serverName;
+				String encodedMessage = eL.encodeString(message,clientPublicKey);
+				
+				out.println(encodedMessage);
 				out.flush();
 				modifyDialogMessage("Message send, waiting for answer...");
 
 				// wait for client answer
-				String response = in.readLine();
+				String response = eL.decodeString(in.readLine());
 
 				Log.i("result", response);
 				if (response.startsWith("denied")) {

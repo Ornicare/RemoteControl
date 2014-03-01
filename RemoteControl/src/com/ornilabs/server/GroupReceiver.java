@@ -142,6 +142,7 @@ public class GroupReceiver extends StoppableThread{
 
 
 	public void closeConnection() {
+		Log.e("GM","Close c");
 		isReady = false;
 		try {
 			try {
@@ -155,6 +156,7 @@ public class GroupReceiver extends StoppableThread{
 	}
 	
 	public void openConnection() {
+		Log.e("GM","Open c");
 		this.isReady = true;
 		try {
 			socket = new MulticastSocket(porToListen);

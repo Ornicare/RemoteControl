@@ -16,17 +16,20 @@
 <!-- </menu> -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
-<!--        <item -->
-<!--         android:id="@+id/action_add_category" -->
-<!--         android:title="@string/listen_mode" -->
-<!--         android:icon="@drawable/add" -->
-<!--         android:showAsAction="ifRoom" -->
-<!--     	android:numericShortcut="1"/> -->
+       <item
+        android:id="@+id/action_mask_not_linked_clients"
+        android:title="@string/listen_mode"
+        android:icon="@android:drawable/stat_notify_sync"
+        android:showAsAction="ifRoom"
+    	android:numericShortcut="1"
+    	android:gravity="center"/>
     <item
         android:id="@+id/action_reploy"
         android:title="@string/menu2"
         android:icon="@drawable/collapse"
         android:showAsAction="ifRoom"
-    	android:numericShortcut="2"/>
+    	android:numericShortcut="2"
+    	android:gravity="center"/>
+
 
 </menu>

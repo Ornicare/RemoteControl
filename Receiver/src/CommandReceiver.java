@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import javax.swing.JOptionPane;
 
+import com.ornilabs.encryption.EncryptionLayer;
 import com.ornilabs.helpers.CommandHelper;
 import com.ornilabs.helpers.StoppableThread;
 
@@ -38,22 +39,34 @@ public class CommandReceiver extends StoppableThread{
 				out = new PrintWriter(socket.getOutputStream());
 				in = new BufferedReader(new InputStreamReader(
 						socket.getInputStream()));
+				
+				System.out.println("Initiate encryption layer.");
+				EncryptionLayer eL = new EncryptionLayer();
+				
+				String serverPublicKey = in.readLine();
+				System.out.println("@"+serverPublicKey+"@");
+				out.println(eL.getPublicKey());
+				out.flush();
+				
 				System.out.println("Waiting for first message.");
 				//get first line
 				String first_message = in.readLine();
+				
+				first_message = eL.decodeString(first_message);
+				
 				System.out.println("First message : "+first_message);
 				if(first_message.startsWith("Command:"+clientUUID+":")) {
 					//Process command
 					String command = first_message.substring(new String("Command:"+clientUUID+":").length());
 					System.out.println("Command : "+command);
 					String s = CommandHelper.executeCommand(command);
-					out.println("execute : "+s.replace("\n", "|"));
+					out.println(eL.encodeString("execute : "+s.replace("\n", "|"),serverPublicKey));
 					out.flush();
 					return;
 				}
 				else if(first_message.startsWith("Command:")) {
 					System.out.println("Wrong UUID !");
-					out.println("denied");
+					out.println(eL.encodeString("denied",serverPublicKey));
 					out.flush();
 					return;
 				}
@@ -68,9 +81,9 @@ public class CommandReceiver extends StoppableThread{
 				                               new String[]{"Yes","No"},
 				                               "No");
 				if(choice == 0 ){
-					out.println(clientUUID.toString());
+					out.println(eL.encodeString(clientUUID.toString(),serverPublicKey));
 				}else{
-					out.println("denied");
+					out.println(eL.encodeString("denied",serverPublicKey));
 				}
 				out.flush();
 
